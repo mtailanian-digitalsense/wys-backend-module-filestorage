@@ -16,7 +16,7 @@ import os
 app = Flask(__name__)
 
 FS_LOCATION_PATH = os.getenv('FS_LOCATION_PATH', '.')
-FS_DNS_URL = os.getenv('FS_DNS_URL_URL', 'http://127.0.0.1:5000')
+FS_DNS_URL = os.getenv('FS_DNS_URL', 'http://127.0.0.1:5000')
 FILE_URL = '/api/filestorage/'
 app.config['UPLOAD_FOLDER'] = FS_LOCATION_PATH
 CORS(app)
