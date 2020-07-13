@@ -17,7 +17,7 @@ content_type='multipart/form-data'
 
 ### Success Response
 
-**Code**: 200
+**Code**: 201
 
 **Content Example**
 
@@ -48,3 +48,41 @@ The file that you want to download.
 **Condition**: If the file required isn't in the server
 
 **Code**: `404 Not Found`
+
+## Save a file
+
+**URL** : `/api/filestorage/{filename}`
+
+**URL Parameters**: `{filename}=[string]` where `{filename}` is the name of the file with extension.
+
+**Method** : `PUT`
+
+**Required form data** : 
+```
+content_type='multipart/form-data'
+"file=@FILENAME;type=application/extension"
+```
+**Auth required** : YES
+
+### Success Response
+
+**Code**: 200
+
+**Content Example**
+
+````json
+{
+  "url": "http://127.0.0.1:5000/api/filestorage/Y3ZfMTMucGRmMTU5NDU3NjgzNS4zMzUzNTg=.pdf"
+}
+````
+
+### Error Responses
+
+**Condition**: If the file required isn't in the server
+
+**Code**: `404 Not Found`
+
+**Condition**: Internal Error
+
+**Code**: `500 Internal Error Server`
+

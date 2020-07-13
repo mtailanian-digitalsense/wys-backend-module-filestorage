@@ -1,15 +1,15 @@
 from flask import Flask, jsonify, abort, \
-                  request, flash, send_from_directory
+    request, flash, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from datetime import datetime as dt
-from flask_sqlalchemy import SQLAlchemy
 import logging
 import base64 as b64
 import jwt
 from functools import wraps
 from flask_swagger import swagger
 from flask_swagger_ui import get_swaggerui_blueprint
+from http import HTTPStatus
 
 import os
 
@@ -108,12 +108,12 @@ def save_file():
     """
     # Check if the post request has the file part
     if 'file' not in request.files:
-        abort(400, "No Multipart file found")
+        abort(HTTPStatus.BAD_REQUEST, "No Multipart file found")
     file = request.files['file']
 
     if file.filename == '':
         flash('No selected File')
-        abort(400, "No selected file")
+        abort(HTTPStatus.NOT_FOUND, "No selected file")
     encoding = "utf-8"
     filename: str = secure_filename(file.filename)
     filename_ext: str = filename + str(dt.timestamp(dt.utcnow()))
@@ -125,10 +125,11 @@ def save_file():
     dict_ret = {
         'url': FS_DNS_URL + FILE_URL + filename_coded + ext
     }
-    return jsonify(dict_ret)
+    file.close()
+    return jsonify(dict_ret), HTTPStatus.CREATED
 
 
-@app.route(FILE_URL+'<filename>', methods=['GET'])
+@app.route(FILE_URL + '<filename>', methods=['GET'])
 def get_file(filename: str):
     """
         Get a file saved in this service
@@ -136,6 +137,10 @@ def get_file(filename: str):
 
         tags:
         - "Filestorage"
+        produces:
+        - "application/json"
+        consumes:
+        - "multipart/form-data"
         parameters:
         - in: "path"
           name: "filename"
@@ -144,6 +149,60 @@ def get_file(filename: str):
     """
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
+
+
+@app.route(FILE_URL + '<filename>', methods=['PUT'])
+@token_required
+def update_file(filename: str):
+    """
+        Update a file
+        ---
+
+        tags:
+        - "Filestorage"
+        parameters:
+        - in: "path"
+          name: "filename"
+          description: "Filename to update"
+          required: true
+        - name: "file"
+          in: "formData"
+          description: "File to upload"
+          required: true
+          type: file
+        responses:
+          200:
+            description: Update successfully
+          404:
+            description: "File not found"
+          500:
+            description: "Internal Error"
+
+    """
+    # Check if file exist
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.isfile(path):
+        err = {'msg': f"{filename} File not found"}
+        logging.warning(err['msg'])
+        abort(HTTPStatus.NOT_FOUND, jsonify(err))
+
+    try:
+        # Save file
+        file = request.files['file']
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file.close()
+        dict_ret = {
+            'url': FS_DNS_URL + FILE_URL + filename
+        }
+        return jsonify(dict_ret)
+
+    except Exception as ex:
+        err = {
+            'msg': f"Can't update file {filename}",
+            'err': ex
+        }
+        logging.warning(err)
+        abort(HTTPStatus.INTERNAL_SERVER_ERROR, jsonify(err))
 
 
 if __name__ == '__main__':
