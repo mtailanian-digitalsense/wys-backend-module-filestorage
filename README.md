@@ -49,7 +49,7 @@ The file that you want to download.
 
 **Code**: `404 Not Found`
 
-## Save a file
+## Update a file
 
 **URL** : `/api/filestorage/{filename}`
 
@@ -85,4 +85,23 @@ content_type='multipart/form-data'
 **Condition**: Internal Error
 
 **Code**: `500 Internal Error Server`
+
+## Delete file
+**URL** : `/api/filestorage/{filename}`
+
+**URL Parameters**: `{filename}=[string]` where `{filename}` is the name of the file with extension.
+
+**Method**: `Delete`
+
+**Auth required**: Yes
+
+### Success Response
+
+**Code**: `200 OK`
+
+### Error Responses
+
+**Condition**: If the file required isn't in the server
+
+**Code**: `404 Not Found`
 

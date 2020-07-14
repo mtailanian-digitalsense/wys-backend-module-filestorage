@@ -75,6 +75,22 @@ class FileStorageSave(unittest.TestCase):
                 filename = link.split('/')[-1]
                 self.files.append(filename)
 
+    def test_delete(self):
+        link = ""
+        with app.test_client() as client:
+            rv = self.upload_file(client)
+            # Get URL
+            link: str = json.loads(rv.data)["url"]
+            filename = link.split('/')[-1]
+            # Delete file
+            client.environ_base['HTTP_AUTHORIZATION'] = self.build_token(self.key)
+            rv = client.delete('/api/filestorage/' + filename)
+            self.assertEqual(rv.status_code, HTTPStatus.OK)
+
+            # Get a file deleted
+            rv = client.get('/api/filestorage/' + filename)
+            self.assertEqual(rv.status_code, HTTPStatus.NOT_FOUND)
+
     def upload_file(self, client):
         with open('ContractWorkplaces-Logo2014.jpg', 'rb') as test_file:
             client.environ_base['HTTP_AUTHORIZATION'] = self.build_token(self.key)

@@ -205,5 +205,35 @@ def update_file(filename: str):
         abort(HTTPStatus.INTERNAL_SERVER_ERROR, jsonify(err))
 
 
+@app.route(FILE_URL + '<filename>', methods=['DELETE'])
+@token_required
+def delete_file(filename):
+    """
+    Delete a file
+    ---
+    tags:
+    - "Filestorage"
+    parameters:
+    - in: "path"
+      name: "filename"
+      description: "Filename to update"
+      required: true
+    responses:
+      200:
+        description: Deleted
+      404:
+        description: Not found
+
+    """
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.isfile(path):
+        err = {'msg': f"{filename} File not found"}
+        logging.warning(err['msg'])
+        abort(HTTPStatus.NOT_FOUND, jsonify(err))
+
+    os.remove(path)
+    return jsonify({'msg': "Deleted"}, HTTPStatus.OK)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
